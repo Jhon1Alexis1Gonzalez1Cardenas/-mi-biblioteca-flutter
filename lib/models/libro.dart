@@ -1,4 +1,13 @@
 class Libro {
+  static const String estadoPendiente = 'Pendiente';
+  static const String estadoLeyendo = 'Leyendo';
+  static const String estadoTerminado = 'Terminado';
+  static const List<String> estados = [
+    estadoPendiente,
+    estadoLeyendo,
+    estadoTerminado,
+  ];
+
   final int? id;
   final String titulo;
   final String autor;
