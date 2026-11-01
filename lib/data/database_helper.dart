@@ -1,30 +1,36 @@
-import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:sqflite/sqflite.dart';
 
 class DatabaseHelper {
-  static final DatabaseHelper instance = DatabaseHelper._init();
-  static Database? _database;
+  DatabaseHelper({DatabaseFactory? fabrica, String? rutaBaseDeDatos})
+      : _factory = fabrica,
+        _ruta = rutaBaseDeDatos;
 
-  DatabaseHelper._init();
+  static final DatabaseHelper instance = DatabaseHelper();
+
+  static const String nombreArchivo = 'mi_biblioteca.db';
+  static const int version = 1;
+
+  /// Si es null se usa la fábrica de sqflite para Android.
+  final DatabaseFactory? _factory;
+  final String? _ruta;
+  Database? _database;
 
   Future<Database> get database async {
-    if (_database != null) return _database!;
-    _database = await _initDB('mi_biblioteca.db');
-    return _database!;
+    return _database ??= await _abrir();
   }
 
-  Future<Database> _initDB(String filePath) async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, filePath);
-
-    return await openDatabase(
-      path,
-      version: 1,
-      onCreate: _createDB,
+  Future<Database> _abrir() async {
+    final factory = _factory ?? databaseFactory;
+    final ruta =
+        _ruta ?? join(await factory.getDatabasesPath(), nombreArchivo);
+    return factory.openDatabase(
+      ruta,
+      options: OpenDatabaseOptions(version: version, onCreate: _crear),
     );
   }
 
-  Future _createDB(Database db, int version) async {
+  Future<void> _crear(Database db, int version) async {
     await db.execute('''
       CREATE TABLE libros (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -37,8 +43,8 @@ class DatabaseHelper {
     ''');
   }
 
-  Future<void> close() async {
-    final db = await instance.database;
-    await db.close();
+  Future<void> cerrar() async {
+    await _database?.close();
+    _database = null;
   }
 }

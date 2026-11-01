@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/libros_provider.dart';
+import '../models/libro.dart';
 import '../theme/app_theme.dart';
 import '../widgets/estado_vacio.dart';
 import '../widgets/libro_card.dart';
 import 'agregar_libro_screen.dart';
+import 'detalle_libro_screen.dart';
 
 class ListaLibrosScreen extends StatefulWidget {
   const ListaLibrosScreen({super.key});
@@ -29,6 +31,12 @@ class _ListaLibrosScreenState extends State<ListaLibrosScreen> {
     );
   }
 
+  Future<void> _abrirDetalle(Libro libro) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => DetalleLibroScreen(libro: libro)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<LibrosProvider>();
@@ -43,6 +51,7 @@ class _ListaLibrosScreenState extends State<ListaLibrosScreen> {
               child: _Contenido(
                 provider: provider,
                 onAgregar: _abrirAgregarLibro,
+                onAbrirLibro: _abrirDetalle,
               ),
             ),
           ],
@@ -102,10 +111,15 @@ class _Encabezado extends StatelessWidget {
 }
 
 class _Contenido extends StatelessWidget {
-  const _Contenido({required this.provider, required this.onAgregar});
+  const _Contenido({
+    required this.provider,
+    required this.onAgregar,
+    required this.onAbrirLibro,
+  });
 
   final LibrosProvider provider;
   final VoidCallback onAgregar;
+  final void Function(Libro libro) onAbrirLibro;
 
   @override
   Widget build(BuildContext context) {
@@ -163,7 +177,12 @@ class _Contenido extends StatelessWidget {
             ],
           ),
         ),
-        ...provider.libros.map((libro) => LibroCard(libro: libro)),
+        ...provider.libros.map(
+          (libro) => LibroCard(
+            libro: libro,
+            onTap: () => onAbrirLibro(libro),
+          ),
+        ),
       ],
     );
   }
