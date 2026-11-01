@@ -19,6 +19,14 @@ class AppTheme {
   static const Color statusFinishedBg = Color(0xFFDCFCE7);
   static const Color statusFinishedText = Color(0xFF15803D);
 
+  // Colores sólidos para el estado seleccionado en los formularios
+  static const Color statusPendingSolid = Color(0xFF6E6E73);
+  static const Color statusReadingSolid = Color(0xFF3B5BD9);
+  static const Color statusFinishedSolid = Color(0xFF2E7D32);
+
+  static const Color dangerBg = Color(0xFFFDE8E8);
+  static const Color dangerText = Color(0xFFB3261E);
+
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
