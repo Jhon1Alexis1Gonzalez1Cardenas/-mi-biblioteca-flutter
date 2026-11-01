@@ -8,45 +8,7 @@ import 'package:mi_biblioteca/providers/libros_provider.dart';
 import 'package:mi_biblioteca/screens/lista_libros_screen.dart';
 import 'package:mi_biblioteca/theme/app_theme.dart';
 
-class _RepositorioFalso extends LibroRepository {
-  _RepositorioFalso({List<Libro>? libros}) : _libros = libros ?? [];
-
-  final List<Libro> _libros;
-  int _siguienteId = 1;
-
-  @override
-  Future<List<Libro>> listar() async => List.of(_libros);
-
-  @override
-  Future<Libro?> obtenerPorId(int id) async {
-    for (final libro in _libros) {
-      if (libro.id == id) return libro;
-    }
-    return null;
-  }
-
-  @override
-  Future<Libro> insertar(Libro libro) async {
-    final guardado = libro.copyWith(id: _siguienteId++);
-    _libros.insert(0, guardado);
-    return guardado;
-  }
-
-  @override
-  Future<bool> actualizar(Libro libro) async {
-    final indice = _libros.indexWhere((existente) => existente.id == libro.id);
-    if (indice == -1) return false;
-    _libros[indice] = libro;
-    return true;
-  }
-
-  @override
-  Future<bool> eliminar(int id) async {
-    final antes = _libros.length;
-    _libros.removeWhere((libro) => libro.id == id);
-    return _libros.length < antes;
-  }
-}
+import 'helpers/repositorio_falso.dart';
 
 Widget _crearApp(LibroRepository repositorio) {
   return ChangeNotifierProvider(
@@ -67,7 +29,7 @@ void _pantallaAlta(WidgetTester tester) {
 
 void main() {
   testWidgets('Muestra el estado vacío cuando no hay libros', (tester) async {
-    await tester.pumpWidget(_crearApp(_RepositorioFalso()));
+    await tester.pumpWidget(_crearApp(RepositorioFalso()));
     await tester.pumpAndSettle();
 
     expect(find.text('Tu biblioteca está vacía'), findsOneWidget);
@@ -75,7 +37,7 @@ void main() {
   });
 
   testWidgets('Lista los libros guardados', (tester) async {
-    final repositorio = _RepositorioFalso(
+    final repositorio = RepositorioFalso(
       libros: [
         Libro(
           id: 1,
@@ -94,11 +56,11 @@ void main() {
     // El título aparece en la portada y en el encabezado de la tarjeta.
     expect(find.text('La sombra del viento'), findsWidgets);
     expect(find.text('Carlos Ruiz Zafón'), findsOneWidget);
-    expect(find.text('Leyendo'), findsOneWidget);
+    expect(find.text('Leyendo'), findsWidgets);
   });
 
   testWidgets('Valida título y autor obligatorios al guardar', (tester) async {
-    await tester.pumpWidget(_crearApp(_RepositorioFalso()));
+    await tester.pumpWidget(_crearApp(RepositorioFalso()));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Agregar libro'));
@@ -112,7 +74,7 @@ void main() {
   });
 
   testWidgets('Guarda un libro nuevo y lo muestra en la lista', (tester) async {
-    final repositorio = _RepositorioFalso();
+    final repositorio = RepositorioFalso();
     await tester.pumpWidget(_crearApp(repositorio));
     await tester.pumpAndSettle();
 
@@ -131,14 +93,14 @@ void main() {
     await tester.tap(find.text('Guardar libro'));
     await tester.pumpAndSettle();
 
-    expect(repositorio._libros, hasLength(1));
+    expect(repositorio.libros, hasLength(1));
     expect(find.text('Nada'), findsWidgets);
     expect(find.text('Carmen Laforet'), findsOneWidget);
   });
 
   testWidgets('El detalle muestra los datos del libro', (tester) async {
     _pantallaAlta(tester);
-    await tester.pumpWidget(_crearApp(_RepositorioFalso(libros: [_libroDemo()])));
+    await tester.pumpWidget(_crearApp(RepositorioFalso(libros: [_libroDemo()])));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('La sombra del viento').first);
@@ -156,7 +118,7 @@ void main() {
 
   testWidgets('Editar cambia el estado y vuelve al detalle', (tester) async {
     _pantallaAlta(tester);
-    final repositorio = _RepositorioFalso(libros: [_libroDemo()]);
+    final repositorio = RepositorioFalso(libros: [_libroDemo()]);
     await tester.pumpWidget(_crearApp(repositorio));
     await tester.pumpAndSettle();
 
@@ -176,14 +138,14 @@ void main() {
     await tester.tap(find.text('Guardar cambios'));
     await tester.pumpAndSettle();
 
-    expect(repositorio._libros.first.estadoLectura, Libro.estadoTerminado);
+    expect(repositorio.libros.first.estadoLectura, Libro.estadoTerminado);
     expect(find.text('Detalle del libro'), findsOneWidget);
     expect(find.text('100%'), findsOneWidget);
   });
 
   testWidgets('Eliminar pide confirmación y vuelve a la lista', (tester) async {
     _pantallaAlta(tester);
-    final repositorio = _RepositorioFalso(libros: [_libroDemo()]);
+    final repositorio = RepositorioFalso(libros: [_libroDemo()]);
     await tester.pumpWidget(_crearApp(repositorio));
     await tester.pumpAndSettle();
 
@@ -198,9 +160,77 @@ void main() {
     await tester.tap(find.text('Eliminar'));
     await tester.pumpAndSettle();
 
-    expect(repositorio._libros, isEmpty);
+    expect(repositorio.libros, isEmpty);
     expect(find.text('Tu biblioteca está vacía'), findsOneWidget);
   });
+
+  testWidgets('Busca libros por título desde el campo de búsqueda',
+      (tester) async {
+    _pantallaAlta(tester);
+    await tester.pumpWidget(_crearApp(_bibliotecaDemo()));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Buscar por título o autor'),
+      'sombra',
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('La sombra del viento'), findsWidgets);
+    expect(find.text('Nada'), findsNothing);
+    expect(find.text('1 libro'), findsOneWidget);
+  });
+
+  testWidgets('El chip de estado filtra y se combina con la búsqueda',
+      (tester) async {
+    _pantallaAlta(tester);
+    await tester.pumpWidget(_crearApp(_bibliotecaDemo()));
+    await tester.pumpAndSettle();
+
+    final chipTerminado = find.byKey(const ValueKey('chip-filtro-Terminado'));
+    await tester.ensureVisible(chipTerminado);
+    await tester.pumpAndSettle();
+    await tester.tap(chipTerminado);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Nada'), findsWidgets);
+    expect(find.text('La sombra del viento'), findsNothing);
+    expect(find.text('1 libro'), findsOneWidget);
+
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Buscar por título o autor'),
+      'sombra',
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Sin resultados'), findsOneWidget);
+
+    await tester.tap(find.text('Limpiar filtros'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('La sombra del viento'), findsWidgets);
+    expect(find.text('Nada'), findsWidgets);
+  });
+}
+
+RepositorioFalso _bibliotecaDemo() {
+  return RepositorioFalso(
+    libros: [
+      libroDePrueba(
+        id: 1,
+        titulo: 'La sombra del viento',
+        autor: 'Carlos Ruiz Zafón',
+        estadoLectura: Libro.estadoLeyendo,
+      ),
+      libroDePrueba(
+        id: 2,
+        titulo: 'Nada',
+        autor: 'Carmen Laforet',
+        anioPublicacion: 1945,
+        estadoLectura: Libro.estadoTerminado,
+      ),
+    ],
+  );
 }
 
 Libro _libroDemo() {
