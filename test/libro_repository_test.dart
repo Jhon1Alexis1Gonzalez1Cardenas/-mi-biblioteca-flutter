@@ -101,4 +101,44 @@ void main() {
     final repetido = await repositorio.eliminar(guardado.id!);
     expect(repetido, isFalse);
   });
+
+  test('listar sin libros devuelve una lista vacía', () async {
+    expect(await repositorio.listar(), isEmpty);
+  });
+
+  test('listar devuelve los libros más recientes primero', () async {
+    final primero = await repositorio.insertar(
+      libroDePrueba(titulo: 'Primero'),
+    );
+    final segundo = await repositorio.insertar(
+      libroDePrueba(titulo: 'Segundo'),
+    );
+
+    final libros = await repositorio.listar();
+
+    expect(libros.map((libro) => libro.id), [segundo.id, primero.id]);
+  });
+
+  test('los libros guardados se pueden buscar por título o autor', () async {
+    await repositorio.insertar(
+      libroDePrueba(titulo: 'La sombra del viento', autor: 'Carlos Ruiz Zafón'),
+    );
+    await repositorio.insertar(
+      libroDePrueba(titulo: 'Nada', autor: 'Carmen Laforet'),
+    );
+
+    final libros = await repositorio.listar();
+
+    final porTitulo = libros.where(
+      (libro) => libro.titulo.toLowerCase().contains('sombra'),
+    );
+    final porAutor = libros.where(
+      (libro) => libro.autor.toLowerCase().contains('laforet'),
+    );
+
+    expect(porTitulo, hasLength(1));
+    expect(porTitulo.first.autor, 'Carlos Ruiz Zafón');
+    expect(porAutor, hasLength(1));
+    expect(porAutor.first.titulo, 'Nada');
+  });
 }

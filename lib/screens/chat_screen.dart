@@ -22,10 +22,9 @@ class ChatScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => ChatProvider(
-        service: chatService,
-        configuracion: configuracion,
-      )..cargarConfiguracion(),
+      create: (_) =>
+          ChatProvider(service: chatService, configuracion: configuracion)
+            ..cargarConfiguracion(),
       child: _ChatContenido(nombreUsuario: nombreUsuario),
     );
   }
@@ -53,7 +52,7 @@ class _ChatContenidoState extends State<_ChatContenido> {
 
   void _desplazarAlFinal() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_scrollController.hasClients) return;
+      if (!mounted || !_scrollController.hasClients) return;
       _scrollController.animateTo(
         _scrollController.position.maxScrollExtent,
         duration: const Duration(milliseconds: 250),
@@ -96,9 +95,7 @@ class _ChatContenidoState extends State<_ChatContenido> {
   }
 
   void _mostrarAviso(String texto) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(texto)),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(texto)));
   }
 
   @override
@@ -137,9 +134,7 @@ class _ChatContenidoState extends State<_ChatContenido> {
                     ),
                     const SizedBox(height: 4),
                   ],
-                  ...chat.mensajes.map(
-                    (mensaje) => _Burbuja(mensaje: mensaje),
-                  ),
+                  ...chat.mensajes.map((mensaje) => _Burbuja(mensaje: mensaje)),
                   if (chat.enviando) const _IndicadorEscribiendo(),
                   if (chat.error != null)
                     _BurbujaError(
@@ -205,10 +200,7 @@ class _EncabezadoChat extends StatelessWidget {
                 SizedBox(height: 2),
                 Text(
                   'Tu compañero de lectura',
-                  style: TextStyle(
-                    color: AppTheme.textMuted,
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: AppTheme.textMuted, fontSize: 12),
                 ),
               ],
             ),
@@ -242,8 +234,8 @@ class _Bienvenida extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final saludo = nombreUsuario == null || nombreUsuario!.trim().isEmpty
-        ? '¡Hola! Soy tu asistente de lectura.'
-        : '¡Hola, ${nombreUsuario!.trim()}! Soy tu asistente de lectura.';
+        ? '¡Hola! Soy tu compañero de lectura.'
+        : '¡Hola, ${nombreUsuario!.trim()}! Soy tu compañero de lectura.';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -287,8 +279,10 @@ class _Bienvenida extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
                 textStyle: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -485,8 +479,10 @@ class _CampoEnvio extends StatelessWidget {
                   enabledBorder: InputBorder.none,
                   focusedBorder: InputBorder.none,
                   filled: false,
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 14,
+                  ),
                 ),
               ),
             ),
@@ -500,11 +496,7 @@ class _CampoEnvio extends StatelessWidget {
               onTap: habilitado ? onEnviar : null,
               child: const Padding(
                 padding: EdgeInsets.all(13),
-                child: Icon(
-                  Icons.arrow_upward,
-                  color: Colors.white,
-                  size: 22,
-                ),
+                child: Icon(Icons.arrow_upward, color: Colors.white, size: 22),
               ),
             ),
           ),
@@ -519,10 +511,7 @@ class _CampoEnvio extends StatelessWidget {
 /// Es un widget con estado propio para que el controlador del campo de texto
 /// se libere cuando el diálogo ya salió del árbol.
 class _DialogoServidorIA extends StatefulWidget {
-  const _DialogoServidorIA({
-    required this.provider,
-    required this.urlActual,
-  });
+  const _DialogoServidorIA({required this.provider, required this.urlActual});
 
   final ChatProvider provider;
   final String urlActual;
@@ -550,8 +539,7 @@ class _DialogoServidorIAState extends State<_DialogoServidorIA> {
   Future<void> _guardar() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final guardado =
-        await widget.provider.guardarUrlServidor(_controller.text);
+    final guardado = await widget.provider.guardarUrlServidor(_controller.text);
     if (!mounted || !guardado) return;
 
     Navigator.of(context).pop('Servidor guardado');
@@ -589,23 +577,16 @@ class _DialogoServidorIAState extends State<_DialogoServidorIA> {
                 hintText: ConfiguracionIA.urlPorDefecto,
                 helperText: 'Debe empezar por http:// o https://',
               ),
-              validator: (valor) =>
-                  ConfiguracionIA.esUrlValida(valor ?? '')
-                      ? null
-                      : 'Debe empezar por http:// o https://',
+              validator: (valor) => ConfiguracionIA.esUrlValida(valor ?? '')
+                  ? null
+                  : 'Debe empezar por http:// o https://',
             ),
           ],
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: _restablecer,
-          child: const Text('Restablecer'),
-        ),
-        FilledButton(
-          onPressed: _guardar,
-          child: const Text('Guardar'),
-        ),
+        TextButton(onPressed: _restablecer, child: const Text('Restablecer')),
+        FilledButton(onPressed: _guardar, child: const Text('Guardar')),
       ],
     );
   }

@@ -63,4 +63,13 @@ class Libro {
       estadoLectura: estadoLectura ?? this.estadoLectura,
     );
   }
+
+  /// Progreso estimado según el estado; el modelo no guarda páginas leídas.
+  double get progresoLectura => switch (estadoLectura) {
+    estadoTerminado => 1,
+    estadoLeyendo => 0.5,
+    _ => 0,
+  };
+
+  int get porcentajeLectura => (progresoLectura * 100).round();
 }

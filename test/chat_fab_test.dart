@@ -15,9 +15,7 @@ import 'helpers/repositorio_falso.dart';
 Widget _crearApp(AuthService authService) {
   return MultiProvider(
     providers: [
-      ChangeNotifierProvider(
-        create: (_) => AuthProvider(service: authService),
-      ),
+      ChangeNotifierProvider(create: (_) => AuthProvider(service: authService)),
       ChangeNotifierProvider(
         create: (_) => LibrosProvider(repository: RepositorioFalso()),
       ),
@@ -42,8 +40,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  testWidgets('Sin sesión no se muestra el botón flotante IA',
-      (tester) async {
+  testWidgets('Sin sesión no se muestra el botón flotante IA', (tester) async {
     _pantallaAlta(tester);
     await tester.pumpWidget(_crearApp(AuthServiceFalso()));
     await tester.pumpAndSettle();
@@ -73,4 +70,39 @@ void main() {
     expect(find.text('Asistente IA'), findsOneWidget);
     expect(find.textContaining('¡Hola, Ana!'), findsOneWidget);
   });
+
+  testWidgets(
+    'El botón IA aparece al iniciar sesión y desaparece al cerrarla',
+    (tester) async {
+      _pantallaAlta(tester);
+      await tester.pumpWidget(_crearApp(AuthServiceFalso()));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(FloatingActionButton), findsNothing);
+
+      await tester.tap(find.text('Iniciar sesión'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'tu@correo.com'),
+        'ana@correo.com',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Mínimo 6 caracteres'),
+        'lectura123',
+      );
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Iniciar sesión'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(FloatingActionButton), findsOneWidget);
+
+      await tester.tap(find.text('A'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Cerrar sesión'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(FloatingActionButton), findsNothing);
+      expect(find.text('Iniciar sesión'), findsOneWidget);
+    },
+  );
 }

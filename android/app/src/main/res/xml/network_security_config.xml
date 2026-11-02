@@ -1,9 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   Permite HTTP en claro (sin https) hacia el servidor local de Ollama.
-  Por defecto: 10.0.2.2 es el PC visto desde el emulador de Android.
-  Si usas un celular físico, agrega la IP de tu PC en la red local
-  (por ejemplo, 192.168.1.50).
+
+  ¿Por qué no se restringe a 10.0.2.2 y a redes privadas?
+  Android Network Security Configuration solo acepta nombres de host o
+  direcciones IP concretas en <domain>; no admite rangos CIDR ni comodines
+  como 192.168.0.0/16 o 10.0.0.0/8. Además, la URL del servidor se puede
+  cambiar desde los ajustes del chat para usar la IP de un PC en la red
+  local (por ejemplo, 192.168.1.50), así que una lista fija rompería el
+  chat en un celular físico.
+
+  Por eso se deja cleartextTrafficPermitted="true" y se documenta en el
+  README. Si en el futuro solo se usara el emulador, se podría cambiar
+  base-config a false y agregar:
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">10.0.2.2</domain>
+    </domain-config>
 -->
 <network-security-config>
     <base-config cleartextTrafficPermitted="true" />
