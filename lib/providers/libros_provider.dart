@@ -5,7 +5,7 @@ import '../models/libro.dart';
 
 class LibrosProvider extends ChangeNotifier {
   LibrosProvider({LibroRepository? repository})
-      : _repository = repository ?? LibroRepository();
+    : _repository = repository ?? LibroRepository();
 
   final LibroRepository _repository;
 
@@ -25,8 +25,7 @@ class LibrosProvider extends ChangeNotifier {
   /// Estado seleccionado en los chips; null equivale a "Todos".
   String? get filtroEstado => _filtroEstado;
 
-  bool get hayFiltros =>
-      _busqueda.trim().isNotEmpty || _filtroEstado != null;
+  bool get hayFiltros => _busqueda.trim().isNotEmpty || _filtroEstado != null;
 
   /// Libros que cumplen la búsqueda por título/autor y el filtro de estado.
   List<Libro> get librosFiltrados {
@@ -85,22 +84,11 @@ class LibrosProvider extends ChangeNotifier {
     try {
       _libros = await _repository.listar();
     } catch (_) {
+      _libros = [];
       _error = 'No se pudieron cargar tus libros. Intenta de nuevo.';
     } finally {
       _cargando = false;
       notifyListeners();
-    }
-  }
-
-  Future<Libro?> obtenerPorId(int id) async {
-    try {
-      final libro = await _repository.obtenerPorId(id);
-      if (libro == null) return null;
-      _reemplazar(libro);
-      notifyListeners();
-      return libro;
-    } catch (_) {
-      return null;
     }
   }
 

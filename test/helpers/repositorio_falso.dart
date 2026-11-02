@@ -8,8 +8,15 @@ class RepositorioFalso extends LibroRepository {
   final List<Libro> libros;
   int _siguienteId = 1;
 
+  /// Simula fallos de SQLite para probar los estados de error.
+  bool errorAlListar = false;
+  bool errorAlInsertar = false;
+
   @override
-  Future<List<Libro>> listar() async => List.of(libros);
+  Future<List<Libro>> listar() async {
+    if (errorAlListar) throw Exception('Fallo simulado al listar');
+    return List.of(libros);
+  }
 
   @override
   Future<Libro?> obtenerPorId(int id) async {
@@ -21,6 +28,7 @@ class RepositorioFalso extends LibroRepository {
 
   @override
   Future<Libro> insertar(Libro libro) async {
+    if (errorAlInsertar) throw Exception('Fallo simulado al insertar');
     final guardado = libro.copyWith(id: _siguienteId++);
     libros.insert(0, guardado);
     return guardado;

@@ -8,11 +8,13 @@ class EstadoVacio extends StatelessWidget {
     required this.titulo,
     required this.mensaje,
     this.accion,
+    this.icono = Icons.menu_book_outlined,
   });
 
   final String titulo;
   final String mensaje;
   final Widget? accion;
+  final IconData icono;
 
   @override
   Widget build(BuildContext context) {
@@ -29,11 +31,7 @@ class EstadoVacio extends StatelessWidget {
                 color: AppTheme.primaryContainer,
                 borderRadius: BorderRadius.circular(28),
               ),
-              child: const Icon(
-                Icons.menu_book_outlined,
-                size: 44,
-                color: AppTheme.primaryColor,
-              ),
+              child: Icon(icono, size: 44, color: AppTheme.primaryColor),
             ),
             const SizedBox(height: 24),
             Text(
@@ -55,10 +53,7 @@ class EstadoVacio extends StatelessWidget {
                 height: 1.4,
               ),
             ),
-            if (accion != null) ...[
-              const SizedBox(height: 24),
-              accion!,
-            ],
+            if (accion != null) ...[const SizedBox(height: 24), accion!],
           ],
         ),
       ),

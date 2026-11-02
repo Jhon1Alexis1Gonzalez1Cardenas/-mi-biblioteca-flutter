@@ -13,10 +13,12 @@ class LibroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final detalle = [
-      if (libro.genero.trim().isNotEmpty) libro.genero.trim(),
-      if (libro.anioPublicacion > 0) '${libro.anioPublicacion}',
-    ].join(' · ');
+    final detalle = libro.estadoLectura == Libro.estadoLeyendo
+        ? '${libro.porcentajeLectura}%'
+        : [
+            if (libro.genero.trim().isNotEmpty) libro.genero.trim(),
+            if (libro.anioPublicacion > 0) '${libro.anioPublicacion}',
+          ].join(' · ');
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),

@@ -43,24 +43,22 @@ class _ListaLibrosScreenState extends State<ListaLibrosScreen> {
   }
 
   Future<void> _abrirAgregarLibro() async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const AgregarLibroScreen()),
-    );
+    await Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => const AgregarLibroScreen()));
   }
 
   Future<void> _abrirDetalle(Libro libro) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => DetalleLibroScreen(libro: libro)),
-    );
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => DetalleLibroScreen(libro: libro)));
   }
 
   Future<void> _abrirChat() async {
     final auth = context.read<AuthProvider>();
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => ChatScreen(
-          nombreUsuario: _nombreDesdeCorreo(auth.usuario?.correo),
-        ),
+        builder: (_) =>
+            ChatScreen(nombreUsuario: _nombreDesdeCorreo(auth.usuario?.correo)),
       ),
     );
   }
@@ -78,9 +76,8 @@ class _ListaLibrosScreenState extends State<ListaLibrosScreen> {
   Widget build(BuildContext context) {
     final provider = context.watch<LibrosProvider>();
     final auth = context.watch<AuthProvider>();
-    final mostrarFiltros = !provider.cargando &&
-        provider.error == null &&
-        !provider.estaVacia;
+    final mostrarFiltros =
+        !provider.cargando && provider.error == null && !provider.estaVacia;
 
     return Scaffold(
       body: SafeArea(
@@ -181,10 +178,7 @@ class _Encabezado extends StatelessWidget {
                     SizedBox(height: 4),
                     Text(
                       'Tu colección, siempre en orden',
-                      style: TextStyle(
-                        color: AppTheme.textMuted,
-                        fontSize: 13,
-                      ),
+                      style: TextStyle(color: AppTheme.textMuted, fontSize: 13),
                     ),
                   ],
                 ),
@@ -237,9 +231,9 @@ class _BotonSesion extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const LoginScreen()),
-          ),
+          onTap: () =>
+              Navigator.of(context)
+                  .push(MaterialPageRoute(builder: (_) => const LoginScreen())),
           child: const Padding(
             padding: EdgeInsets.symmetric(horizontal: 14, vertical: 9),
             child: Row(
@@ -280,10 +274,7 @@ class _BotonSesion extends StatelessWidget {
           enabled: false,
           child: Text(
             correo,
-            style: const TextStyle(
-              color: AppTheme.textDark,
-              fontSize: 13,
-            ),
+            style: const TextStyle(color: AppTheme.textDark, fontSize: 13),
           ),
         ),
         const PopupMenuDivider(),
@@ -343,6 +334,7 @@ class _Contenido extends StatelessWidget {
       return EstadoVacio(
         titulo: 'Algo salió mal',
         mensaje: provider.error!,
+        icono: Icons.error_outline,
         accion: ElevatedButton(
           onPressed: () => context.read<LibrosProvider>().cargarLibros(),
           child: const Text('Reintentar'),
@@ -364,8 +356,10 @@ class _Contenido extends StatelessWidget {
     if (provider.sinResultados) {
       return EstadoVacio(
         titulo: 'Sin resultados',
-        mensaje: 'No encontramos libros con esa búsqueda o filtro. '
+        mensaje:
+            'No encontramos libros con esa búsqueda o filtro. '
             'Prueba con otras palabras.',
+        icono: Icons.search_off,
         accion: ElevatedButton(
           onPressed: onLimpiarFiltros,
           child: const Text('Limpiar filtros'),
@@ -395,21 +389,62 @@ class _Contenido extends StatelessWidget {
               Text(
                 '${resultados.length} '
                 '${resultados.length == 1 ? 'libro' : 'libros'}',
-                style: const TextStyle(
-                  color: AppTheme.textMuted,
-                  fontSize: 13,
-                ),
+                style: const TextStyle(color: AppTheme.textMuted, fontSize: 13),
               ),
             ],
           ),
         ),
         ...resultados.map(
-          (libro) => LibroCard(
-            libro: libro,
-            onTap: () => onAbrirLibro(libro),
-          ),
+          (libro) => LibroCard(libro: libro, onTap: () => onAbrirLibro(libro)),
         ),
+        if (provider.libros.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          _ResumenBiblioteca(libros: provider.libros),
+        ],
       ],
+    );
+  }
+}
+
+/// Resumen de la biblioteca completa, como en el prototipo.
+class _ResumenBiblioteca extends StatelessWidget {
+  const _ResumenBiblioteca({required this.libros});
+
+  final List<Libro> libros;
+
+  @override
+  Widget build(BuildContext context) {
+    int contar(String estado) =>
+        libros.where((libro) => libro.estadoLectura == estado).length;
+
+    final terminados = contar(Libro.estadoTerminado);
+    final leyendo = contar(Libro.estadoLeyendo);
+    final pendientes = contar(Libro.estadoPendiente);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppTheme.primaryContainer.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.fact_check_outlined,
+            color: AppTheme.primaryColor,
+            size: 18,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              '$terminados ${terminados == 1 ? 'terminado' : 'terminados'} · '
+              '$leyendo en lectura · '
+              '$pendientes ${pendientes == 1 ? 'pendiente' : 'pendientes'}',
+              style: const TextStyle(color: AppTheme.textMuted, fontSize: 12.5),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -13,16 +13,10 @@ class DetalleLibroScreen extends StatelessWidget {
 
   final Libro libro;
 
-  double _progreso(Libro libro) => switch (libro.estadoLectura) {
-        Libro.estadoTerminado => 1,
-        Libro.estadoLeyendo => 0.5,
-        _ => 0,
-      };
-
   Future<void> _editar(BuildContext context, Libro actual) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => EditarLibroScreen(libro: actual)),
-    );
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => EditarLibroScreen(libro: actual)));
   }
 
   Future<void> _confirmarEliminar(BuildContext context, Libro actual) async {
@@ -30,9 +24,7 @@ class DetalleLibroScreen extends StatelessWidget {
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: AppTheme.surfaceWhite,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('¿Eliminar libro?'),
         content: Text(
           'Se eliminará «${actual.titulo}» de tu biblioteca. '
@@ -45,9 +37,7 @@ class DetalleLibroScreen extends StatelessWidget {
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            style: TextButton.styleFrom(
-              foregroundColor: AppTheme.dangerText,
-            ),
+            style: TextButton.styleFrom(foregroundColor: AppTheme.dangerText),
             child: const Text('Eliminar'),
           ),
         ],
@@ -59,14 +49,12 @@ class DetalleLibroScreen extends StatelessWidget {
     final id = actual.id;
     if (id == null) return;
 
-    final eliminado =
-        await context.read<LibrosProvider>().eliminarLibro(id);
+    final eliminado = await context.read<LibrosProvider>().eliminarLibro(id);
     if (!context.mounted) return;
 
     if (eliminado) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Libro eliminado')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Libro eliminado')));
       Navigator.of(context).pop();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -81,8 +69,8 @@ class DetalleLibroScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final actual =
         context.watch<LibrosProvider>().buscarPorId(libro.id ?? -1) ?? libro;
-    final progreso = _progreso(actual);
-    final porcentaje = (progreso * 100).round();
+    final progreso = actual.progresoLectura;
+    final porcentaje = actual.porcentajeLectura;
 
     return Scaffold(
       body: SafeArea(
@@ -126,8 +114,11 @@ class DetalleLibroScreen extends StatelessWidget {
                     onTap: () => _editar(context, actual),
                     child: const Padding(
                       padding: EdgeInsets.all(10),
-                      child: Icon(Icons.edit_outlined,
-                          color: Colors.white, size: 20),
+                      child: Icon(
+                        Icons.edit_outlined,
+                        color: Colors.white,
+                        size: 20,
+                      ),
                     ),
                   ),
                 ),
@@ -221,10 +212,7 @@ class DetalleLibroScreen extends StatelessWidget {
                   const SizedBox(height: 10),
                   const Text(
                     'Avanza a tu ritmo. Puedes actualizar el estado al editar.',
-                    style: TextStyle(
-                      color: AppTheme.textMuted,
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: AppTheme.textMuted, fontSize: 12),
                   ),
                 ],
               ),
@@ -293,10 +281,7 @@ class DetalleLibroScreen extends StatelessWidget {
                         ],
                       ),
                     ),
-                    const Icon(
-                      Icons.chevron_right,
-                      color: AppTheme.textMuted,
-                    ),
+                    const Icon(Icons.chevron_right, color: AppTheme.textMuted),
                   ],
                 ),
               ),

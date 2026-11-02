@@ -46,6 +46,11 @@ class _RegistroScreenState extends State<RegistroScreen> {
     }
   }
 
+  void _volverALista() {
+    context.read<AuthProvider>().limpiarError();
+    Navigator.of(context).popUntil((ruta) => ruta.isFirst);
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
@@ -60,8 +65,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
               EncabezadoPantalla(
                 titulo: 'Crear cuenta',
                 subtitulo: 'Regístrate para empezar a usar Mi Biblioteca',
-                onVolver: () =>
-                    Navigator.of(context).popUntil((ruta) => ruta.isFirst),
+                onVolver: _volverALista,
               ),
               const SizedBox(height: 28),
               const EtiquetaCampo('Correo electrónico'),
@@ -71,9 +75,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.next,
                 autofillHints: const [AutofillHints.email],
-                decoration: const InputDecoration(
-                  hintText: 'tu@correo.com',
-                ),
+                decoration: const InputDecoration(hintText: 'tu@correo.com'),
                 validator: validarCorreo,
               ),
               const SizedBox(height: 16),
@@ -142,14 +144,15 @@ class _RegistroScreenState extends State<RegistroScreen> {
                   children: [
                     const Text(
                       '¿Ya tienes cuenta?',
-                      style: TextStyle(
-                        color: AppTheme.textMuted,
-                        fontSize: 14,
-                      ),
+                      style: TextStyle(color: AppTheme.textMuted, fontSize: 14),
                     ),
                     TextButton(
-                      onPressed:
-                          auth.cargando ? null : () => Navigator.of(context).pop(),
+                      onPressed: auth.cargando
+                          ? null
+                          : () {
+                              context.read<AuthProvider>().limpiarError();
+                              Navigator.of(context).pop();
+                            },
                       child: const Text(
                         'Inicia sesión',
                         style: TextStyle(fontWeight: FontWeight.bold),

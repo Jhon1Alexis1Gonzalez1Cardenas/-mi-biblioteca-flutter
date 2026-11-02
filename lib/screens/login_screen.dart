@@ -38,18 +38,21 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     if (exito) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sesión iniciada')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Sesión iniciada')));
       Navigator.of(context).popUntil((ruta) => ruta.isFirst);
     }
   }
 
   void _irARegistro() {
     context.read<AuthProvider>().limpiarError();
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const RegistroScreen()),
-    );
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => const RegistroScreen()));
+  }
+
+  void _volverALista() {
+    context.read<AuthProvider>().limpiarError();
+    Navigator.of(context).pop();
   }
 
   @override
@@ -66,7 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
               EncabezadoPantalla(
                 titulo: 'Iniciar sesión',
                 subtitulo: 'Accede a tu biblioteca personal',
-                onVolver: () => Navigator.of(context).pop(),
+                onVolver: _volverALista,
               ),
               const SizedBox(height: 28),
               const Center(child: _IconoLibro()),
@@ -78,9 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.next,
                 autofillHints: const [AutofillHints.email],
-                decoration: const InputDecoration(
-                  hintText: 'tu@correo.com',
-                ),
+                decoration: const InputDecoration(hintText: 'tu@correo.com'),
                 validator: validarCorreo,
               ),
               const SizedBox(height: 16),
@@ -132,10 +133,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: [
                     const Text(
                       '¿No tienes cuenta?',
-                      style: TextStyle(
-                        color: AppTheme.textMuted,
-                        fontSize: 14,
-                      ),
+                      style: TextStyle(color: AppTheme.textMuted, fontSize: 14),
                     ),
                     TextButton(
                       onPressed: auth.cargando ? null : _irARegistro,

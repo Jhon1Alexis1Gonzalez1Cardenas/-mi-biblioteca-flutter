@@ -6,14 +6,15 @@ import '../services/configuracion_ia.dart';
 
 class ChatProvider extends ChangeNotifier {
   ChatProvider({ChatService? service, ConfiguracionIA? configuracion})
-      : _service = service ?? OllamaChatService(),
-        _configuracion = configuracion ?? ConfiguracionIA();
+    : _service = service ?? OllamaChatService(),
+      _configuracion = configuracion ?? ConfiguracionIA();
 
   final ChatService _service;
   final ConfiguracionIA _configuracion;
 
   final List<MensajeChat> _mensajes = [];
   bool _enviando = false;
+  bool _descartado = false;
   String? _error;
   String _urlServidor = ConfiguracionIA.urlPorDefecto;
 
@@ -23,24 +24,43 @@ class ChatProvider extends ChangeNotifier {
   String get urlServidor => _urlServidor;
   bool get tieneMensajes => _mensajes.isNotEmpty;
 
+  /// Evita notificar después de que la pantalla del chat se cerró.
+  void _notificar() {
+    if (!_descartado) notifyListeners();
+  }
+
   /// Carga la URL del servidor guardada en el dispositivo.
   Future<void> cargarConfiguracion() async {
-    _urlServidor = await _configuracion.obtenerUrl();
-    notifyListeners();
+    try {
+      _urlServidor = await _configuracion.obtenerUrl();
+    } catch (_) {
+      _urlServidor = ConfiguracionIA.urlPorDefecto;
+    }
+    _notificar();
   }
 
   Future<bool> guardarUrlServidor(String url) async {
     if (!ConfiguracionIA.esUrlValida(url)) return false;
-    await _configuracion.guardarUrl(url);
+
+    try {
+      await _configuracion.guardarUrl(url);
+    } catch (_) {
+      return false;
+    }
+
     _urlServidor = url.trim();
-    notifyListeners();
+    _notificar();
     return true;
   }
 
   Future<void> restablecerUrlServidor() async {
-    await _configuracion.restablecerUrl();
+    try {
+      await _configuracion.restablecerUrl();
+    } catch (_) {
+      // Si falla el guardado, al menos se usa el valor por defecto.
+    }
     _urlServidor = ConfiguracionIA.urlPorDefecto;
-    notifyListeners();
+    _notificar();
   }
 
   /// Agrega el mensaje del usuario y pide la respuesta del asistente.
@@ -63,7 +83,7 @@ class ChatProvider extends ChangeNotifier {
   Future<void> _solicitarRespuesta() async {
     _enviando = true;
     _error = null;
-    notifyListeners();
+    _notificar();
 
     try {
       final respuesta = await _service.enviarMensaje(List.of(_mensajes));
@@ -74,7 +94,13 @@ class ChatProvider extends ChangeNotifier {
       _error = 'Ocurrió un error al hablar con el asistente. Intenta de nuevo.';
     } finally {
       _enviando = false;
-      notifyListeners();
+      _notificar();
     }
+  }
+
+  @override
+  void dispose() {
+    _descartado = true;
+    super.dispose();
   }
 }

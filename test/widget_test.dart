@@ -67,6 +67,11 @@ void main() {
     expect(find.text('La sombra del viento'), findsWidgets);
     expect(find.text('Carlos Ruiz Zafón'), findsOneWidget);
     expect(find.text('Leyendo'), findsWidgets);
+    expect(find.text('50%'), findsOneWidget);
+    expect(
+      find.text('0 terminados · 1 en lectura · 0 pendientes'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('Valida título y autor obligatorios al guardar', (tester) async {
@@ -110,7 +115,9 @@ void main() {
 
   testWidgets('El detalle muestra los datos del libro', (tester) async {
     _pantallaAlta(tester);
-    await tester.pumpWidget(_crearApp(RepositorioFalso(libros: [_libroDemo()])));
+    await tester.pumpWidget(
+      _crearApp(RepositorioFalso(libros: [_libroDemo()])),
+    );
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('La sombra del viento').first);
@@ -174,8 +181,9 @@ void main() {
     expect(find.text('Tu biblioteca está vacía'), findsOneWidget);
   });
 
-  testWidgets('Busca libros por título desde el campo de búsqueda',
-      (tester) async {
+  testWidgets('Busca libros por título desde el campo de búsqueda', (
+    tester,
+  ) async {
     _pantallaAlta(tester);
     await tester.pumpWidget(_crearApp(_bibliotecaDemo()));
     await tester.pumpAndSettle();
@@ -191,8 +199,9 @@ void main() {
     expect(find.text('1 libro'), findsOneWidget);
   });
 
-  testWidgets('El chip de estado filtra y se combina con la búsqueda',
-      (tester) async {
+  testWidgets('El chip de estado filtra y se combina con la búsqueda', (
+    tester,
+  ) async {
     _pantallaAlta(tester);
     await tester.pumpWidget(_crearApp(_bibliotecaDemo()));
     await tester.pumpAndSettle();
@@ -220,6 +229,55 @@ void main() {
 
     expect(find.text('La sombra del viento'), findsWidgets);
     expect(find.text('Nada'), findsWidgets);
+  });
+
+  testWidgets('Muestra el error de carga y permite reintentar', (tester) async {
+    _pantallaAlta(tester);
+    final repositorio = RepositorioFalso(libros: [_libroDemo()])
+      ..errorAlListar = true;
+    await tester.pumpWidget(_crearApp(repositorio));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Algo salió mal'), findsOneWidget);
+    expect(
+      find.text('No se pudieron cargar tus libros. Intenta de nuevo.'),
+      findsOneWidget,
+    );
+
+    repositorio.errorAlListar = false;
+    await tester.tap(find.text('Reintentar'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Algo salió mal'), findsNothing);
+    expect(find.text('La sombra del viento'), findsWidgets);
+  });
+
+  testWidgets('Avisa si no se puede guardar un libro', (tester) async {
+    _pantallaAlta(tester);
+    final repositorio = RepositorioFalso()..errorAlInsertar = true;
+    await tester.pumpWidget(_crearApp(repositorio));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Agregar libro'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Escribe el título'),
+      'Nada',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Nombre del autor o autora'),
+      'Carmen Laforet',
+    );
+
+    await tester.tap(find.text('Guardar libro'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('No se pudo guardar el libro. Intenta de nuevo.'),
+      findsOneWidget,
+    );
+    expect(find.text('Guardar libro'), findsOneWidget);
   });
 }
 

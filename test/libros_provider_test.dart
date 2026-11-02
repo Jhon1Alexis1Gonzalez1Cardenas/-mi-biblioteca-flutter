@@ -9,35 +9,35 @@ void main() {
   late LibrosProvider provider;
 
   List<Libro> librosDemo() => [
-        libroDePrueba(
-          id: 1,
-          titulo: 'La sombra del viento',
-          autor: 'Carlos Ruiz Zafón',
-          estadoLectura: Libro.estadoLeyendo,
-        ),
-        libroDePrueba(
-          id: 2,
-          titulo: 'Nada',
-          autor: 'Carmen Laforet',
-          anioPublicacion: 1945,
-          estadoLectura: Libro.estadoTerminado,
-        ),
-        libroDePrueba(
-          id: 3,
-          titulo: 'El infinito en un junco',
-          autor: 'Irene Vallejo',
-          genero: 'Ensayo',
-          anioPublicacion: 2019,
-          estadoLectura: Libro.estadoPendiente,
-        ),
-        libroDePrueba(
-          id: 4,
-          titulo: 'Los detectives salvajes',
-          autor: 'Roberto Bolaño',
-          anioPublicacion: 1998,
-          estadoLectura: Libro.estadoPendiente,
-        ),
-      ];
+    libroDePrueba(
+      id: 1,
+      titulo: 'La sombra del viento',
+      autor: 'Carlos Ruiz Zafón',
+      estadoLectura: Libro.estadoLeyendo,
+    ),
+    libroDePrueba(
+      id: 2,
+      titulo: 'Nada',
+      autor: 'Carmen Laforet',
+      anioPublicacion: 1945,
+      estadoLectura: Libro.estadoTerminado,
+    ),
+    libroDePrueba(
+      id: 3,
+      titulo: 'El infinito en un junco',
+      autor: 'Irene Vallejo',
+      genero: 'Ensayo',
+      anioPublicacion: 2019,
+      estadoLectura: Libro.estadoPendiente,
+    ),
+    libroDePrueba(
+      id: 4,
+      titulo: 'Los detectives salvajes',
+      autor: 'Roberto Bolaño',
+      anioPublicacion: 1998,
+      estadoLectura: Libro.estadoPendiente,
+    ),
+  ];
 
   setUp(() async {
     repositorio = RepositorioFalso(libros: librosDemo());
@@ -137,5 +137,38 @@ void main() {
 
     expect(titulos(), isEmpty);
     expect(provider.sinResultados, isTrue);
+  });
+
+  test(
+    'Muestra un error si falla la carga y se recupera al reintentar',
+    () async {
+      repositorio.errorAlListar = true;
+
+      await provider.cargarLibros();
+
+      expect(
+        provider.error,
+        'No se pudieron cargar tus libros. Intenta de nuevo.',
+      );
+      expect(provider.cargando, isFalse);
+      expect(provider.libros, isEmpty);
+
+      repositorio.errorAlListar = false;
+      await provider.cargarLibros();
+
+      expect(provider.error, isNull);
+      expect(provider.libros, hasLength(4));
+    },
+  );
+
+  test('Devuelve false si falla al guardar un libro', () async {
+    repositorio.errorAlInsertar = true;
+
+    final guardado = await provider.agregarLibro(
+      libroDePrueba(titulo: 'Libro nuevo', autor: 'Autora'),
+    );
+
+    expect(guardado, isFalse);
+    expect(provider.libros, hasLength(4));
   });
 }
