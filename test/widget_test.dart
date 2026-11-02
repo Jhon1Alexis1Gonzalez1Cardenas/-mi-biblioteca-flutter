@@ -4,15 +4,25 @@ import 'package:provider/provider.dart';
 
 import 'package:mi_biblioteca/data/libro_repository.dart';
 import 'package:mi_biblioteca/models/libro.dart';
+import 'package:mi_biblioteca/providers/auth_provider.dart';
 import 'package:mi_biblioteca/providers/libros_provider.dart';
 import 'package:mi_biblioteca/screens/lista_libros_screen.dart';
+import 'package:mi_biblioteca/services/auth_service.dart';
 import 'package:mi_biblioteca/theme/app_theme.dart';
 
+import 'helpers/auth_service_falso.dart';
 import 'helpers/repositorio_falso.dart';
 
-Widget _crearApp(LibroRepository repositorio) {
-  return ChangeNotifierProvider(
-    create: (_) => LibrosProvider(repository: repositorio),
+Widget _crearApp(LibroRepository repositorio, {AuthService? authService}) {
+  return MultiProvider(
+    providers: [
+      ChangeNotifierProvider(
+        create: (_) => AuthProvider(service: authService ?? AuthServiceFalso()),
+      ),
+      ChangeNotifierProvider(
+        create: (_) => LibrosProvider(repository: repositorio),
+      ),
+    ],
     child: MaterialApp(
       theme: AppTheme.lightTheme,
       home: const ListaLibrosScreen(),

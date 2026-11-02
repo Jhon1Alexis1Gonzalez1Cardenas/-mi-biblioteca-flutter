@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../providers/auth_provider.dart';
 import '../providers/libros_provider.dart';
 import '../models/libro.dart';
 import '../theme/app_theme.dart';
@@ -9,6 +10,7 @@ import '../widgets/estado_vacio.dart';
 import '../widgets/libro_card.dart';
 import 'agregar_libro_screen.dart';
 import 'detalle_libro_screen.dart';
+import 'login_screen.dart';
 
 class ListaLibrosScreen extends StatefulWidget {
   const ListaLibrosScreen({super.key});
@@ -98,41 +100,158 @@ class _Encabezado extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Mi Biblioteca',
-                  style: TextStyle(
-                    color: AppTheme.textDark,
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
+          const _BotonSesion(),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Mi Biblioteca',
+                      style: TextStyle(
+                        color: AppTheme.textDark,
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Tu colección, siempre en orden',
+                      style: TextStyle(
+                        color: AppTheme.textMuted,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Material(
+                color: AppTheme.primaryColor,
+                shape: const CircleBorder(),
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: onAgregar,
+                  child: const Padding(
+                    padding: EdgeInsets.all(12),
+                    child: Icon(Icons.add, color: Colors.white, size: 26),
                   ),
                 ),
-                SizedBox(height: 4),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Muestra "Iniciar sesión" sin sesión, o el avatar con el menú de cuenta.
+class _BotonSesion extends StatelessWidget {
+  const _BotonSesion();
+
+  Future<void> _cerrarSesion(BuildContext context) async {
+    final auth = context.read<AuthProvider>();
+    final exito = await auth.cerrarSesion();
+    if (!context.mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          exito ? 'Sesión cerrada' : auth.error ?? 'No se pudo cerrar sesión',
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+
+    if (!auth.autenticado) {
+      return Material(
+        color: AppTheme.surfaceWhite,
+        borderRadius: BorderRadius.circular(20),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const LoginScreen()),
+          ),
+          child: const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.person_outline,
+                  color: AppTheme.primaryColor,
+                  size: 18,
+                ),
+                SizedBox(width: 6),
                 Text(
-                  'Tu colección, siempre en orden',
-                  style: TextStyle(color: AppTheme.textMuted, fontSize: 13),
+                  'Iniciar sesión',
+                  style: TextStyle(
+                    color: AppTheme.primaryColor,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
           ),
-          Material(
-            color: AppTheme.primaryColor,
-            shape: const CircleBorder(),
-            child: InkWell(
-              customBorder: const CircleBorder(),
-              onTap: onAgregar,
-              child: const Padding(
-                padding: EdgeInsets.all(12),
-                child: Icon(Icons.add, color: Colors.white, size: 26),
-              ),
+        ),
+      );
+    }
+
+    final correo = auth.usuario!.correo;
+
+    return PopupMenuButton<String>(
+      tooltip: 'Cuenta',
+      color: AppTheme.surfaceWhite,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      onSelected: (valor) {
+        if (valor == 'cerrar') _cerrarSesion(context);
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem<String>(
+          enabled: false,
+          child: Text(
+            correo,
+            style: const TextStyle(
+              color: AppTheme.textDark,
+              fontSize: 13,
             ),
           ),
-        ],
+        ),
+        const PopupMenuDivider(),
+        const PopupMenuItem<String>(
+          value: 'cerrar',
+          child: Text(
+            'Cerrar sesión',
+            style: TextStyle(color: AppTheme.dangerText, fontSize: 14),
+          ),
+        ),
+      ],
+      child: Container(
+        width: 42,
+        height: 42,
+        alignment: Alignment.center,
+        decoration: const BoxDecoration(
+          color: AppTheme.primaryContainer,
+          shape: BoxShape.circle,
+        ),
+        child: Text(
+          auth.usuario!.inicial,
+          style: const TextStyle(
+            color: AppTheme.primaryColor,
+            fontSize: 17,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
     );
   }
