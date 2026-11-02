@@ -9,6 +9,7 @@ import '../widgets/buscador_libros.dart';
 import '../widgets/estado_vacio.dart';
 import '../widgets/libro_card.dart';
 import 'agregar_libro_screen.dart';
+import 'chat_screen.dart';
 import 'detalle_libro_screen.dart';
 import 'login_screen.dart';
 
@@ -53,9 +54,30 @@ class _ListaLibrosScreenState extends State<ListaLibrosScreen> {
     );
   }
 
+  Future<void> _abrirChat() async {
+    final auth = context.read<AuthProvider>();
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ChatScreen(
+          nombreUsuario: _nombreDesdeCorreo(auth.usuario?.correo),
+        ),
+      ),
+    );
+  }
+
+  /// "ana.perez@correo.com" -> "Ana".
+  String? _nombreDesdeCorreo(String? correo) {
+    final local = correo?.split('@').first.trim() ?? '';
+    if (local.isEmpty) return null;
+    final nombre = local.split(RegExp(r'[._-]')).first;
+    if (nombre.isEmpty) return null;
+    return nombre[0].toUpperCase() + nombre.substring(1);
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<LibrosProvider>();
+    final auth = context.watch<AuthProvider>();
     final mostrarFiltros = !provider.cargando &&
         provider.error == null &&
         !provider.estaVacia;
@@ -82,10 +104,47 @@ class _ListaLibrosScreenState extends State<ListaLibrosScreen> {
                 onAgregar: _abrirAgregarLibro,
                 onAbrirLibro: _abrirDetalle,
                 onLimpiarFiltros: _limpiarFiltros,
+                paddingInferior: auth.autenticado ? 96 : 24,
               ),
             ),
           ],
         ),
+      ),
+      floatingActionButton: auth.autenticado
+          ? FloatingActionButton(
+              onPressed: _abrirChat,
+              tooltip: 'Abrir asistente IA',
+              backgroundColor: AppTheme.primaryColor,
+              child: const _IconoIA(),
+            )
+          : null,
+    );
+  }
+}
+
+/// Icono del botón flotante: burbuja de chat con las letras "IA".
+class _IconoIA extends StatelessWidget {
+  const _IconoIA();
+
+  @override
+  Widget build(BuildContext context) {
+    return const SizedBox(
+      width: 26,
+      height: 26,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Icon(Icons.chat_bubble, color: Colors.white, size: 26),
+          Text(
+            'IA',
+            style: TextStyle(
+              color: AppTheme.primaryColor,
+              fontSize: 9,
+              fontWeight: FontWeight.bold,
+              height: 1,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -263,12 +322,16 @@ class _Contenido extends StatelessWidget {
     required this.onAgregar,
     required this.onAbrirLibro,
     required this.onLimpiarFiltros,
+    this.paddingInferior = 24,
   });
 
   final LibrosProvider provider;
   final VoidCallback onAgregar;
   final void Function(Libro libro) onAbrirLibro;
   final VoidCallback onLimpiarFiltros;
+
+  /// Espacio extra al final para que el botón flotante no tape contenido.
+  final double paddingInferior;
 
   @override
   Widget build(BuildContext context) {
@@ -313,7 +376,7 @@ class _Contenido extends StatelessWidget {
     final resultados = provider.librosFiltrados;
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+      padding: EdgeInsets.fromLTRB(20, 4, 20, paddingInferior),
       children: [
         Padding(
           padding: const EdgeInsets.only(bottom: 12),
