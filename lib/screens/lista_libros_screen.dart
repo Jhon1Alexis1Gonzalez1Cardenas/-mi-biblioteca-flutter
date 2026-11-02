@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/libros_provider.dart';
 import '../models/libro.dart';
 import '../theme/app_theme.dart';
+import '../widgets/buscador_libros.dart';
 import '../widgets/estado_vacio.dart';
 import '../widgets/libro_card.dart';
 import 'agregar_libro_screen.dart';
@@ -17,12 +18,25 @@ class ListaLibrosScreen extends StatefulWidget {
 }
 
 class _ListaLibrosScreenState extends State<ListaLibrosScreen> {
+  final _busquedaController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<LibrosProvider>().cargarLibros();
     });
+  }
+
+  @override
+  void dispose() {
+    _busquedaController.dispose();
+    super.dispose();
+  }
+
+  void _limpiarFiltros() {
+    _busquedaController.clear();
+    context.read<LibrosProvider>().limpiarFiltros();
   }
 
   Future<void> _abrirAgregarLibro() async {
@@ -40,6 +54,9 @@ class _ListaLibrosScreenState extends State<ListaLibrosScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<LibrosProvider>();
+    final mostrarFiltros = !provider.cargando &&
+        provider.error == null &&
+        !provider.estaVacia;
 
     return Scaffold(
       body: SafeArea(
@@ -47,11 +64,22 @@ class _ListaLibrosScreenState extends State<ListaLibrosScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _Encabezado(onAgregar: _abrirAgregarLibro),
+            if (mostrarFiltros)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                child: BuscadorLibros(
+                  controller: _busquedaController,
+                  onBuscar: provider.buscar,
+                  filtroEstado: provider.filtroEstado,
+                  onFiltrar: provider.filtrarPorEstado,
+                ),
+              ),
             Expanded(
               child: _Contenido(
                 provider: provider,
                 onAgregar: _abrirAgregarLibro,
                 onAbrirLibro: _abrirDetalle,
+                onLimpiarFiltros: _limpiarFiltros,
               ),
             ),
           ],
@@ -115,11 +143,13 @@ class _Contenido extends StatelessWidget {
     required this.provider,
     required this.onAgregar,
     required this.onAbrirLibro,
+    required this.onLimpiarFiltros,
   });
 
   final LibrosProvider provider;
   final VoidCallback onAgregar;
   final void Function(Libro libro) onAbrirLibro;
+  final VoidCallback onLimpiarFiltros;
 
   @override
   Widget build(BuildContext context) {
@@ -149,6 +179,20 @@ class _Contenido extends StatelessWidget {
       );
     }
 
+    if (provider.sinResultados) {
+      return EstadoVacio(
+        titulo: 'Sin resultados',
+        mensaje: 'No encontramos libros con esa búsqueda o filtro. '
+            'Prueba con otras palabras.',
+        accion: ElevatedButton(
+          onPressed: onLimpiarFiltros,
+          child: const Text('Limpiar filtros'),
+        ),
+      );
+    }
+
+    final resultados = provider.librosFiltrados;
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
       children: [
@@ -167,8 +211,8 @@ class _Contenido extends StatelessWidget {
                 ),
               ),
               Text(
-                '${provider.libros.length} '
-                '${provider.libros.length == 1 ? 'libro' : 'libros'}',
+                '${resultados.length} '
+                '${resultados.length == 1 ? 'libro' : 'libros'}',
                 style: const TextStyle(
                   color: AppTheme.textMuted,
                   fontSize: 13,
@@ -177,7 +221,7 @@ class _Contenido extends StatelessWidget {
             ],
           ),
         ),
-        ...provider.libros.map(
+        ...resultados.map(
           (libro) => LibroCard(
             libro: libro,
             onTap: () => onAbrirLibro(libro),
