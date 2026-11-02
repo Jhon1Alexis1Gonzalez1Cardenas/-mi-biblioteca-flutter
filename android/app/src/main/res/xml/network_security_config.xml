@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Permite HTTP en claro (sin https) hacia el servidor local de Ollama.
+  Por defecto: 10.0.2.2 es el PC visto desde el emulador de Android.
+  Si usas un celular físico, agrega la IP de tu PC en la red local
+  (por ejemplo, 192.168.1.50).
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>
